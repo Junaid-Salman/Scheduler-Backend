@@ -1,18 +1,16 @@
-import { Entity, ObjectIdColumn, Column } from 'typeorm';
-import { ObjectId } from 'mongodb';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-/**
- * TypeORM entity for users (MongoDB). Used only in infrastructure.
- * Mapping to domain entity User is done in the repository.
- */
 @Entity('users')
 export class UserOrmEntity {
-  @ObjectIdColumn()
-  _id: ObjectId;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
+
+  @Column()
+  passwordHash: string;
 }

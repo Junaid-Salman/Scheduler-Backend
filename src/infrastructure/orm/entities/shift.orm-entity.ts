@@ -1,30 +1,29 @@
-import { Entity, ObjectIdColumn, Column } from 'typeorm';
-import { ObjectId } from 'mongodb';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 /**
- * TypeORM entity for shifts (MongoDB). Used only in infrastructure.
+ * TypeORM entity for shifts (PostgreSQL). Used only in infrastructure.
  * Mapping to domain entity Shift is done in the repository.
  */
 @Entity('shifts')
 export class ShiftOrmEntity {
-  @ObjectIdColumn()
-  _id: ObjectId;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   employeeId: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'timestamptz' })
   startAt: Date;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'timestamptz' })
   endAt: Date;
 
   @Column({ nullable: true })
   position?: string;
 
-  @Column({ type: 'date', default: () => new Date() })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @Column({ type: 'date', default: () => new Date() })
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

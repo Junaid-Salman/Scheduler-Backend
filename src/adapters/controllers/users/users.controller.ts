@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Body, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto } from '../../../application/dtos/users';
 import { GetAllUsersUseCase, CreateUserUseCase } from '../../../application/use-cases/users';
 
 @ApiTags('Users')
+@ApiBearerAuth('access-token')
 @Controller('users')
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);

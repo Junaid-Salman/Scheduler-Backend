@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository } from 'typeorm';
-import { ObjectId } from 'mongodb';
+import { Repository } from 'typeorm';
 import type { IUsersRepository } from '../../../domain/interfaces/users-repository.interface';
 import { User } from '../../../domain/entities';
 import { UserOrmEntity } from '../entities/user.orm-entity';
@@ -10,7 +9,7 @@ import { UserOrmEntity } from '../entities/user.orm-entity';
 export class TypeOrmUsersRepository implements IUsersRepository {
   constructor(
     @InjectRepository(UserOrmEntity)
-    private readonly userRepository: MongoRepository<UserOrmEntity>,
+    private readonly userRepository: Repository<UserOrmEntity>,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -19,29 +18,22 @@ export class TypeOrmUsersRepository implements IUsersRepository {
   }
 
   async findById(id: string): Promise<User | null> {
-    let objectId: ObjectId;
-    try {
-      objectId = new ObjectId(id);
-    } catch {
-      return null;
-    }
-    const entity = await this.userRepository.findOne({
-      where: { _id: objectId },
-    });
+    const numericId = parseInt(id, 10);
+    if (Number.isNaN(numericId)) return null;
+    const entity = await this.userRepository.findOne({ where: { id: numericId } });
     return entity ? this.toDomain(entity) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const entity = await this.userRepository.findOne({
-      where: { email },
-    });
+    const entity = await this.userRepository.findOne({ where: { email } });
     return entity ? this.toDomain(entity) : null;
   }
 
-  async create(data: { name: string; email: string }): Promise<User> {
+  async create(data: { name: string; email: string; passwordHash: string }): Promise<User> {
     const entity = this.userRepository.create({
       name: data.name,
       email: data.email,
+      passwordHash: data.passwordHash,
     });
     const saved = await this.userRepository.save(entity);
     return this.toDomain(saved);
@@ -49,9 +41,10 @@ export class TypeOrmUsersRepository implements IUsersRepository {
 
   private toDomain(orm: UserOrmEntity): User {
     return {
-      id: orm._id.toString(),
+      id: String(orm.id),
       name: orm.name,
       email: orm.email,
+      passwordHash: orm.passwordHash,
     };
   }
 }

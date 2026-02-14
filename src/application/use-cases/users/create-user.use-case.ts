@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { Injectable, Inject, Logger, ConflictException } from '@nestjs/common';
 import { GlobalResponseDto } from '../../dtos/common';
 import { CreateUserDto } from '../../dtos/users';
@@ -25,9 +26,11 @@ export class CreateUserUseCase {
         throw new ConflictException(`User with email ${dto.email} already exists`);
       }
 
+      const passwordHash = await bcrypt.hash(dto.password, 10);
       const user = await this.usersRepository.create({
         name: dto.name,
         email: dto.email,
+        passwordHash,
       });
 
       return GlobalResponseDto.success(UserResponseDto.fromDomain(user));

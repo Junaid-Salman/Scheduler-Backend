@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import {
   GetShiftsQueryDto,
   CreateShiftDto,
@@ -14,6 +14,7 @@ import {
 } from '../../../application/use-cases/scheduler';
 
 @ApiTags('Scheduler')
+@ApiBearerAuth('access-token')
 @Controller('scheduler')
 export class SchedulerController {
   private readonly logger = new Logger(SchedulerController.name);

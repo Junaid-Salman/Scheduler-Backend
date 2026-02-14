@@ -5,9 +5,11 @@
  */
 import { ShiftOrmEntity } from './shift.orm-entity';
 import { UserOrmEntity } from './user.orm-entity';
+import { RefreshTokenOrmEntity } from './refresh-token.orm-entity';
 
 export { ShiftOrmEntity } from './shift.orm-entity';
 export { UserOrmEntity } from './user.orm-entity';
+export { RefreshTokenOrmEntity } from './refresh-token.orm-entity';
 
 /** All ORM entities – single source of truth for "schema" (use in TypeOrmModule.forRoot) */
-export const ormEntities = [ShiftOrmEntity, UserOrmEntity];
+export const ormEntities = [ShiftOrmEntity, UserOrmEntity, RefreshTokenOrmEntity];

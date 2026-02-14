@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository } from 'typeorm';
-import { ObjectId } from 'mongodb';
+import { Repository, MoreThan } from 'typeorm';
 import type {
   ISchedulerRepository,
   CreateShiftData,
@@ -15,7 +14,7 @@ import { ShiftOrmEntity } from '../entities/shift.orm-entity';
 export class TypeOrmSchedulerRepository implements ISchedulerRepository {
   constructor(
     @InjectRepository(ShiftOrmEntity)
-    private readonly shiftRepository: MongoRepository<ShiftOrmEntity>,
+    private readonly shiftRepository: Repository<ShiftOrmEntity>,
   ) {}
 
   async findAll(
@@ -25,6 +24,7 @@ export class TypeOrmSchedulerRepository implements ISchedulerRepository {
     const { page, limit, sortBy = 'createdAt', sortOrder = 'DESC' } = pagination;
     const skip = (page - 1) * limit;
 
+    const order = { [this.sanitizeSortField(sortBy)]: sortOrder } as const;
     const where: Record<string, unknown> = {};
     if (filters?.employeeId) {
       where.employeeId = filters.employeeId;
@@ -32,7 +32,7 @@ export class TypeOrmSchedulerRepository implements ISchedulerRepository {
 
     const [items, total] = await this.shiftRepository.findAndCount({
       where,
-      order: { [this.sanitizeSortField(sortBy)]: sortOrder },
+      order,
       skip,
       take: limit,
     });
@@ -51,11 +51,9 @@ export class TypeOrmSchedulerRepository implements ISchedulerRepository {
   }
 
   async findById(id: string): Promise<Shift | null> {
-    const objectId = this.toObjectId(id);
-    if (!objectId) return null;
-    const entity = await this.shiftRepository.findOne({
-      where: { _id: objectId },
-    });
+    const numericId = parseInt(id, 10);
+    if (Number.isNaN(numericId)) return null;
+    const entity = await this.shiftRepository.findOne({ where: { id: numericId } });
     return entity ? this.toDomain(entity) : null;
   }
 
@@ -71,39 +69,28 @@ export class TypeOrmSchedulerRepository implements ISchedulerRepository {
   }
 
   async update(id: string, data: UpdateShiftData): Promise<Shift | null> {
-    const objectId = this.toObjectId(id);
-    if (!objectId) return null;
-    const entity = await this.shiftRepository.findOne({
-      where: { _id: objectId },
-    });
+    const numericId = parseInt(id, 10);
+    if (Number.isNaN(numericId)) return null;
+    const entity = await this.shiftRepository.findOne({ where: { id: numericId } });
     if (!entity) return null;
     if (data.employeeId !== undefined) entity.employeeId = data.employeeId;
     if (data.startAt !== undefined) entity.startAt = data.startAt;
     if (data.endAt !== undefined) entity.endAt = data.endAt;
     if (data.position !== undefined) entity.position = data.position;
-    entity.updatedAt = new Date();
     const saved = await this.shiftRepository.save(entity);
     return this.toDomain(saved);
   }
 
   async delete(id: string): Promise<boolean> {
-    const objectId = this.toObjectId(id);
-    if (!objectId) return false;
-    const result = await this.shiftRepository.deleteOne({ _id: objectId } as any);
-    return (result.deletedCount ?? 0) > 0;
-  }
-
-  private toObjectId(id: string): ObjectId | null {
-    try {
-      return new ObjectId(id);
-    } catch {
-      return null;
-    }
+    const numericId = parseInt(id, 10);
+    if (Number.isNaN(numericId)) return false;
+    const result = await this.shiftRepository.delete({ id: numericId });
+    return (result.affected ?? 0) > 0;
   }
 
   private toDomain(orm: ShiftOrmEntity): Shift {
     return {
-      id: orm._id.toString(),
+      id: String(orm.id),
       employeeId: orm.employeeId,
       startAt: orm.startAt,
       endAt: orm.endAt,
