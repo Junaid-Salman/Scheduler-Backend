@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RefreshToken {
+  id        Int      @id(map: "PK_7d8bee0204106019488c4c50ffa") @default(autoincrement())
+  tokenHash String   @db.VarChar
+  expiresAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Shift {
+  id         Int      @id(map: "PK_84d692e367e4d6cdf045828768c") @default(autoincrement())
+  employeeId String   @db.VarChar
+  startAt    DateTime @db.Timestamptz(6)
+  endAt      DateTime @db.Timestamptz(6)
+  position   String?  @db.VarChar
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("shifts")
+}
+
+model User {
+  id            Int            @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @default(autoincrement())
+  name          String         @db.VarChar
+  email         String         @unique(map: "UQ_97672ac88f789774dd47f7c8be3") @db.VarChar
+  passwordHash  String         @db.VarChar
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
